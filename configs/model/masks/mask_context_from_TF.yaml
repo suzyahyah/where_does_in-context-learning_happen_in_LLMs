@@ -1,0 +1,11 @@
+model:
+    cuda: True
+    model_size: gptn2.7B
+    hack: True
+    save_fol: ""
+    layer_maskdd: True
+    mask_from: True
+    mask_layer: 0
+    causal_mask:
+        instructions: True
+        prompts: False

@@ -1,0 +1,9 @@
+*.ipynb_checkpoints/**
+*.swp
+*.pyc
+**/__pycache__/**
+results
+generated
+data
+models
+temp_bashargs

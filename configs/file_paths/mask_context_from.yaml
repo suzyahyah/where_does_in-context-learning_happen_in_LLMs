@@ -1,0 +1,14 @@
+STANDARD_FP0: gen-{generator.name}{data.doclevel}/{data.trainset}-{data.testset}/{model.model_size}-nprompts{sample_prompts.nprompts}-seed{seed}.{data.direction}
+STANDARD_FP: format-{format.name}/{sample_prompts.name}/${STANDARD_FP0}
+
+gen_fn: generated/mask_context_from/instructions-{model.causal_mask.instructions}_prompts-{model.causal_mask.prompts}_query-{model.causal_mask.query}/layer-{model.mask_layer}/${STANDARD_FP}.csv.hyp
+
+res_fn: results/mask_context_from/instructions-{model.causal_mask.instructions}_prompts-{model.causal_mask.prompts}_query-{model.causal_mask.query}/layer-{model.mask_layer}/${STANDARD_FP}.json
+#gen_fn_for_prompt: generated/format-{format.name}/${STANDARD_FP0}.csv.hyp
+#
+
+test_source_fn: data/{data.testset}/subset_test/{data.direction}.{data.source}.txt
+test_target_fn: data/{data.testset}/subset_test/{data.direction}.{data.target}.txt
+test_parallel_fn: data/{data.testset}/subset_test/{data.direction}.csv
+
+used_prompts_fn: assets/{data.trainset}/nprompts{sample_prompts.nprompts}_seed{seed}.{data.direction}.txt

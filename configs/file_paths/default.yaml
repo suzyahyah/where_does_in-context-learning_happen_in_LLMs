@@ -1,0 +1,11 @@
+#HOME: /exp/ssia/projects/where_does_icl_happen
+STANDARD_FP0: gen-{generator.name}{data.doclevel}/{data.trainset}-{data.testset}/{model.model_size}-nprompts{sample_prompts.nprompts}-seed{seed}.{data.direction}
+STANDARD_FP: format-{format.name}/{sample_prompts.name}/${STANDARD_FP0}
+
+gen_fn_baseline: generated/baselines/${STANDARD_FP}.csv.hyp
+res_fn_baseline: results/baselines/${STANDARD_FP}.json
+
+test_source_fn: data/{data.testset}/subset_test/{data.direction}.{data.source}.txt
+test_target_fn: data/{data.testset}/subset_test/{data.direction}.{data.target}.txt
+test_parallel_fn: data/{data.testset}/subset_test/{data.direction}.csv 
+used_prompts_fn: assets/{data.trainset}/nprompts{sample_prompts.nprompts}_seed{seed}.{data.direction}.txt
