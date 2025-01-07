@@ -22,5 +22,4 @@ PYTHONPATH=. python src/main.py \
     --model.model_size ${exp_args['model']} \
     --sample_prompts.nprompts ${exp_args['nprompts']} \
     --file_paths_cfg configs/file_paths/mask_context_from.yaml \
-    --data.ntest 5 \
     --generator.batch_size 2

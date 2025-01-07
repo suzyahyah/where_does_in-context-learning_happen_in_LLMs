@@ -21,7 +21,7 @@ elif [[ $task == "machine_translation" ]]; then
     exp_args['data_file']="default"
 fi
 
-exps=("TT,$task", "FT,$task", "FT,none_QA")
+exps=("TTT,$task", "TTF,$task", "FTF,$task", "FTF,none_QA")
 
 # write exp versions.
 for seed in ${SEEDS[@]}; do
