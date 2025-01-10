@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Author: Suzanna Sia
 
+mkdir -p data/MBPP/train
+mkdir -p data/MBPP/valid
+mkdir -p data/HEVAL/test
 
 MBPP_PATH=https://raw.githubusercontent.com/google-research/google-research/master/mbpp/mbpp.jsonl 
 HEVAL_PATH=https://github.com/openai/human-eval/raw/master/data/HumanEval.jsonl.gz
@@ -10,7 +13,7 @@ wget $HEVAL_PATH
 
 gunzip HumanEval.jsonl.gz
 
-mv mbbp.jsonl data
+mv mbpp.jsonl data
 mv HumanEval.jsonl data
 
 sed -n '1,800p' data/mbpp.jsonl > data/MBPP/train/en-py.tsv
