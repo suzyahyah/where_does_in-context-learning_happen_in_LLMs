@@ -29,7 +29,7 @@ def get_model_class(model_size, args_model):
                 "llama": llama_model_hack.LlamaForCausalLMHack
         }
         for key in name2class:
-            if key in model_size:
+            if key in model_size.lower():
                 cls_name = name2class[key]
 
         if not cls_name:
@@ -43,7 +43,7 @@ def get_model_class(model_size, args_model):
 
 def load_if_hack(cls_name, og_fol, args_model):
     quant_config = None
-    if "7b" in args_model.model_size or "7B" in args_model.model_size:
+    if any(size in args_model.model_size.lower() for size in ('7b', '8b')):
         quant_config = BitsAndBytesConfig(load_in_8bit=True,
                                           llm_int8_enable_fp32_cpu_offload=True)
 
@@ -61,11 +61,8 @@ def get_model_path(model_size="gptn2.7B"):
     elif "bloom" in model_size:
         size = model_size.replace("bloom", "")
         og_fol = f"bigscience/bloom-{size}"
-    elif "llama" in model_size:
-        if "llama3" in model_size:
-            og_fol = f"/exp/ssia/projects/meta-llama/Meta-Llama-3-8B-Instruct" 
-        else:
-            og_fol = f"/exp/ssia/projects/llama/models/{model_size}"
+    elif "llama" in model_size.lower():
+        og_fol = f'meta-llama/{model_size}'
 
     elif "starcoder2" in model_size:
         og_fol = f'bigcode/{model_size}' 
