@@ -69,7 +69,12 @@ def save_and_eval(cfp, args, all_gen_text):
         score = evaluate_functional_correctness(hyp_fn,
                 k=[1],
                 problem_file="data/HumanEval.jsonl")
-        res_fn = cfp['res_fn'].format(**args)
+        if args.do_baseline:
+            res_fn = cfp['res_fn_baseline'].format(**args)
+
+        else:
+            res_fn = cfp['res_fn'].format(**args)
+
         dir_path = os.path.dirname(res_fn)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
