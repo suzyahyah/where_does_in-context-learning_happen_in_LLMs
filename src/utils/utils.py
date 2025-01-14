@@ -6,6 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 import torch
 from src.utils import nvidia_utils
+from transformers import StoppingCriteria, StoppingCriteriaList
 
 def generation(hf_generator_cf, 
                format_cf, 
@@ -15,9 +16,18 @@ def generation(hf_generator_cf,
                dataloader):
 
     all_gen_text = []
+#    stopping_criteria = StoppingCriteriaList([StopOnTokens(tokenizer, format_cf, model_cf)])
+    stopping_criteria = None
 
     for j, batch in enumerate(tqdm(dataloader)):
         build_causal_mask_per_batch(model_cf, model, batch)
+        prompt_len = max(batch['prompt_len'])
+        if "FLORES" in dataloader.dataset.ds_promptbank.name:
+            max_new_tokens = ((prompt_len - batch['instructions_len'][0]) // dataloader.dataset.nprompts) 
+            print("Max new tokens for translation:", max_new_tokens)
+        else:
+            max_new_tokens = ((prompt_len - batch['instructions_len'][0]) // dataloader.dataset.nprompts) * 2
+
 
         with torch.no_grad():
             outputs = model.generate(batch['input_ids'],
@@ -25,21 +35,22 @@ def generation(hf_generator_cf,
                                      pad_token_id=tokenizer.pad_token_id,
                                      return_dict_in_generate=True,
                                      output_scores=True,
+                                     stopping_criteria=stopping_criteria,
+                                     max_new_tokens=max_new_tokens,
                                      **hf_generator_cf)
 
         gen_ids = outputs.sequences
         # later versions of huggingface dont need to find start_ix
         start_ix = batch['input_ids'].shape[1]
         gen_text = tokenizer.batch_decode(gen_ids[:, start_ix:])
-        gen_text = clean_up(gen_text, format_cf)
+        gen_text = clean_up(gen_text, format_cf, tokenizer)
 
         if j == 0:
             # vibe check
             print(tokenizer.decode(batch['input_ids'][0]))
             print("\n====")
             print("raw gen:", tokenizer.batch_decode(gen_ids[:, start_ix:])[0])
-            print("\n====")
-            print("cleanup:", gen_text)
+            print("cleanup:", gen_text[0])
             out = nvidia_utils.print_gpu_utilization()
             print(out)
 
@@ -48,18 +59,15 @@ def generation(hf_generator_cf,
 
     return all_gen_text 
 
-def clean_up(gen_text, format_cf):
-    l1_delim = format_cf['L1_delim']['value']
-    l2_delim = format_cf['L2_delim']['value']
+def clean_up(gen_text, format_cf, tokenizer):
+    l1_delim = format_cf['L1_delim']['value'] 
 
     if l1_delim.strip() != "":
         gen_text = [t.split(l1_delim)[0].strip() for t in gen_text]
 
-    if l2_delim.strip() != "":
-        gen_text = [t.split(l2_delim)[0].strip() for t in gen_text]
-
     gen_text = [t.replace("</s>", "") for t in gen_text]
     gen_text = [t.replace("<pad>", "") for t in gen_text]
+    gen_text = [t.replace(tokenizer.eos_token, "") for t in gen_text]
     return gen_text
 
 
@@ -129,7 +137,7 @@ def build_causal_mask_per_batch(model_cf, model, batch):
 
             if model_cf.causal_mask.query:
                 if mask_from is None:
-                    mask_from = start
+                    mask_from = start + batch['prompt_len'][item]
                 mask_till = start + batch['prompt_len'][item] + batch['query_len'][item]
            
             batch_mask_from.append(mask_from)
@@ -186,3 +194,23 @@ def construct_mask(model, mask_layer, batch_mask_from, batch_mask_till):
         self_attn.mask_prev_positions = True
         self_attn.mask_from = batch_mask_from
         self_attn.mask_till = batch_mask_till
+
+class StopOnTokens(StoppingCriteria):
+    def __init__(self, tokenizer, format_cf, model_cf):
+        l1_delim = format_cf['L1_delim']['value'].strip()
+        print("l1_delim:", l1_delim)
+        # second token for Llama
+        if "Llama" in str(model_cf.model_size):
+            self.stop_token_ids = tokenizer.encode(l1_delim)[1:]
+        else:
+            self.stop_token_ids = tokenizer.encode(l1_delim)
+
+        print("stop token ids:", self.stop_token_ids)
+
+    def __call__(self, input_ids, scores, **kwargs):
+        if input_ids[0, -2].item() == self.stop_token_ids[0] and input_ids[0, -1].item() == self.stop_token_ids[1]:
+            return True
+        return False
+
+
+
