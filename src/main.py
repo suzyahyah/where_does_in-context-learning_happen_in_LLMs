@@ -29,8 +29,10 @@ def run(args, cfp, do_baseline=False):
                             collate_fn=collate_fn,
                             batch_size=args.generator.batch_size)
 
+    all_gen_text = []
     if do_baseline:
         print("save to:", cfp['gen_fn_baseline'].format(**args))
+        print("save to:", cfp['res_fn_baseline'].format(**args))
         if not args.eval_only:
             all_gen_text = utils.generation(args.hf_generator_configs,
                                             args.format,
@@ -38,19 +40,23 @@ def run(args, cfp, do_baseline=False):
                                             model,
                                             tokenizer,
                                             dataloader)
-
         io_utils.save_and_eval(cfp, args, all_gen_text)
 
     else:
         # do layering experiments here.
-        print("save to:", cfp['gen_fn'].format(**args))
         if hasattr(model.config, "num_layers"):
             num_layers = model.config.num_layers
         elif hasattr(model.config, "num_hidden_layers"):
             num_layers = model.config.num_hidden_layers
 
-        for layer in range(num_layers):
+        if args.end_layer != -1:
+            num_layers = args.end_layer
+
+        for layer in range(args.start_layer, num_layers):
             args.model.mask_layer = layer
+
+            print("save to:", cfp['gen_fn'].format(**args))
+            print(str(dataloader.dataset.__class__))
             if not args.eval_only:
                 all_gen_text = utils.generation(args.hf_generator_configs,
                                                 args.format,
@@ -81,8 +87,9 @@ if __name__ == "__main__":
     argparser.add_argument('--generator_cf', default='configs/generator/default.yaml')
     argparser.add_argument('--logitsp_cf', default='configs/logits_processor/default.yaml')
     argparser.add_argument('--model_cf', default='configs/model/default.yaml')
-    argparser.add_argument('--heval', action="store_true")
     argparser.add_argument('--file_paths_cfg', default="")
+    argparser.add_argument('--start_layer', default=0, type=int)
+    argparser.add_argument('--end_layer', default=-1, type=int)
 
     args, uk_args = argparser.parse_known_args()
 
