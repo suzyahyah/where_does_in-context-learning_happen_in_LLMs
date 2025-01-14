@@ -117,12 +117,12 @@ def build_causal_mask_per_batch(model_cf, model, batch):
         batch_mask_till = []
         
         for item in range(len(batch['input_ids'])):
+            mask_from, mask_till = None, None
             start = batch['input_ids'].shape[1] - batch['input_len'][item]
+
             if "Llama" in str(model.__class__):
                 # Llama needs <s> as the first token
                 start = start + 1
-            mask_from, mask_till = None, None
-
             if model_cf.causal_mask.instructions:
                 mask_from = start
                 mask_till = start + batch['instructions_len'][item]
@@ -143,10 +143,19 @@ def build_causal_mask_per_batch(model_cf, model, batch):
             batch_mask_from.append(mask_from)
             batch_mask_till.append(mask_till)
 
+
+        # handle total masking except for single last token
+        if "mask_all" in model_cf.causal_mask:
+            mask_all = model_cf.causal_mask.mask_all
+        else:
+            mask_all = False
+
+
         construct_mask(model, 
-                       model_cf.mask_layer, 
+                       model_cf.mask_layer,
                        batch_mask_from, 
-                       batch_mask_till)
+                       batch_mask_till,
+                       mask_all=mask_all)
     return 
 
 def reset_mask(model):
@@ -166,12 +175,13 @@ def reset_mask(model):
             raise Exception("not implemented for model")
 
         self_attn.mask_prev_positions = False
+        self_atten.mask_all = False
         self_attn.mask_from = []
         self_attn.mask_till = []
 
     return model
 
-def construct_mask(model, mask_layer, batch_mask_from, batch_mask_till):
+def construct_mask(model, mask_layer, batch_mask_from, batch_mask_till, mask_all=False):
 
     if hasattr(model.config, "num_layers"): 
         num_layers = model.config.num_layers
@@ -190,10 +200,12 @@ def construct_mask(model, mask_layer, batch_mask_from, batch_mask_till):
 
         else:
             raise Exception("not implemented for model")
-
-        self_attn.mask_prev_positions = True
-        self_attn.mask_from = batch_mask_from
-        self_attn.mask_till = batch_mask_till
+        if mask_all:
+            self_attn.mask_all = True
+        else:
+            self_attn.mask_prev_positions = True
+            self_attn.mask_from = batch_mask_from
+            self_attn.mask_till = batch_mask_till
 
 class StopOnTokens(StoppingCriteria):
     def __init__(self, tokenizer, format_cf, model_cf):
