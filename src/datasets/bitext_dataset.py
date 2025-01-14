@@ -49,6 +49,7 @@ class BitextDataset(Dataset):
 class FLORESdataset(BitextDataset):
     def __init__(self, mode="", direction=""):
         super().__init__()
+        self.name = "FLORES"
         self.direction = direction
         L1, L2 = direction.split('-')
 
@@ -98,6 +99,7 @@ class FLORESdataset(BitextDataset):
 class MBPPdataset(BitextDataset):
     def __init__(self, fn, direction):
         super().__init__()
+        self.name = "MBPP"
         datas = []
         with open(fn, 'r') as f:
             for line in f:
@@ -110,6 +112,7 @@ class MBPPdataset(BitextDataset):
 class HEVALdataset(BitextDataset):
     def __init__(self, fn, direction):
         super().__init__()
+        self.name = "HEVAL"
         datas = []
         with open(fn, 'r') as f:
             for line in f:
