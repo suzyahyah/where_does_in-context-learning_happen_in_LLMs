@@ -1,11 +1,14 @@
 #!/usr/bin/env 
 # Author: Suzanna Sia
 
-SEEDS=(0 1 2)
-MODELS=(gptn125M) # run a small model to check the code runs
+SEEDS=(0)
+#MODELS=(CodeLlama-7b-hf CodeLlama-7b-Instruct-hf)
+MODELS=(starcoder2-3B) # run a small model to check the code runs
+#MODELS=(Llama-3.1-8B) # run a small model to check the code runs
 #MODELS=(starcoder2-15B llama7b llama7b-chat starcoder2-3B starcoder2-7B)
 
-task=(machine_translation) #{machine_translation,code_gen}
+task=(code_gen) #{machine_translation,code_gen}
+#task=(code_gen)
 
 declare -A exp_args
 
@@ -17,7 +20,7 @@ if [[ $task == "code_gen" ]]; then
   exp_args['trainset']="MBPP"
   exp_args['testset']="HEVAL"
   exp_args['src-tgt']="en-py"
-  exp_args['data_file']="code_gen"
+  exp_args['data_file']="default"
 
 elif [[ $task == "machine_translation" ]]; then
   exp_args['trainset']="FLORES"

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Author: Suzanna Sia
-SEEDS=(0 1 2) 
-MODELS=(gptn125M) 
+SEEDS=(1 2 3 4) 
+#MODELS=(Llama-3.1-8B-Instruct Llama-3.1-8B CodeLlama-7b-Instruct-hf CodeLlama-7b-hf starcoder2-7B) 
+MODELS=(starcoder2-7B Llama-3.1-8B-Instruct)
 #{starcoder2-7B, llama7b, llama7b-chat, gptn2.7B, bloom3b)
-task=(machine_translation) # {machine_translation,code_gen}
+task=(code_gen) # {machine_translation,code_gen}
 
 declare -A exp_args
 exp_args['nprompts']=5
@@ -12,7 +13,7 @@ if [[ $task == "code_gen" ]]; then
     exp_args['trainset']="MBPP"
     exp_args['testset']="HEVAL"
     exp_args['src-tgt']="en-py"
-    exp_args['data_file']="code_gen"
+    exp_args['data_file']="default"
 
 elif [[ $task == "machine_translation" ]]; then
     exp_args['trainset']="FLORES"
@@ -22,6 +23,9 @@ elif [[ $task == "machine_translation" ]]; then
 fi
 
 exps=("TTT,$task", "TTF,$task", "FTF,$task", "FTF,none_QA")
+exps=("TTT,$task" "FTF,none_QA")
+#exps=("FTF,$task", "TTF,$task")
+#srctgts=(fr-en en-fr)
 
 # write exp versions.
 for seed in ${SEEDS[@]}; do
