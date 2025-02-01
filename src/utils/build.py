@@ -49,7 +49,7 @@ def build_early_stop_callback(args):
 def build_datasets_for_prompt(args_data):
 
     # build a promptbank and testdataset 
-    prompt_split = "train"
+    prompt_split = "valid"
     test_split = "test"
 
     promptbank = get_fn_dataset(args_data.trainset, 
@@ -62,6 +62,32 @@ def build_datasets_for_prompt(args_data):
                              args_data.direction, 
                              data_path=args_data.test_data_fn)
     return promptbank, test_dataset
+
+def build_datasets_for_train(args_data, train_size=800):
+
+    # build a promptbank and testdataset 
+    train_split = "train"
+    eval_split = "valid"
+    test_split = "test"
+
+    train_dataset = get_fn_dataset(args_data.trainset, 
+                                   train_split,
+                                   args_data.direction, 
+                                   data_path=args_data.train_data_fn)
+
+    train_dataset.df = train_dataset.df[:train_size]
+
+    eval_dataset = get_fn_dataset(args_data.testset, 
+                                   eval_split,
+                                   args_data.direction, 
+                                   data_path=args_data.test_data_fn)
+
+    test_dataset = get_fn_dataset(args_data.testset, 
+                             test_split,
+                             args_data.direction, 
+                             data_path=args_data.test_data_fn)
+    return train_dataset, eval_dataset, test_dataset
+
 
 def build_prompt_dataset(args, ds_promptbank, ds_test):
     prompt_ds = PromptsDataset(args.format, 

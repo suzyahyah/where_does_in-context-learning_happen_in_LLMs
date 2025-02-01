@@ -23,7 +23,7 @@ def get_fn_dataset(dataname, mode, direction="en-fr", data_path="data"):
     if dataname == "FLORES":
         # flores has no train set, so we sample prompts from the dev set. 
         splits_ = {
-            "train": "dev",
+            "train": "train",
             "valid": "dev",
             "test": "devtest"
         }

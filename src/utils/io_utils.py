@@ -54,8 +54,8 @@ def save_and_eval(cfp, args, all_gen_text):
     else:
         hyp_fn = cfp['gen_fn'].format(**(args))
 
-    if args.data.ntest != -1:
-        hyp_fn = hyp_fn + ".temp"
+    #if args.data.ntest != -1:
+    #    hyp_fn = hyp_fn + ".temp"
 
     if args.data.dev:
         hyp_fn = hyp_fn + ".dev"
@@ -153,8 +153,9 @@ def merge_omegaconf_w_argparse(args, uk_args, verbose=True):
     result = OmegaConf.merge(known_args, new_args)
     if verbose:
         print(OmegaConf.to_yaml(result))
-    result.format.direction = result.data.direction 
-    result.format.domain = result.data.testset
+    if "format" in result:
+        result.format.direction = result.data.direction 
+        result.format.domain = result.data.testset
 
     args_ = vars(args)
     for k in args_:

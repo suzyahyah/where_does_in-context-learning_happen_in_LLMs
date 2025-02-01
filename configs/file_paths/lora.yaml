@@ -1,0 +1,9 @@
+gen_fn: generated/lora/layer-{model.train_layer}/trainsize-{train_size}_{model.model_size}-seed{seed}-{data.direction}.csv.hyp
+res_fn: results/lora/layer-{model.train_layer}/trainsize-{train_size}_{model.model_size}-seed{seed}-{data.direction}.json
+
+
+test_source_fn: data/{data.testset}/subset_test/{data.direction}.{data.source}.txt
+test_target_fn: data/{data.testset}/subset_test/{data.direction}.{data.target}.txt
+test_parallel_fn: data/{data.testset}/subset_test/{data.direction}.csv
+
+used_prompts_fn: assets/{data.trainset}/nprompts{sample_prompts.nprompts}_seed{seed}.{data.direction}.txt

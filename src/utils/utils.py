@@ -19,19 +19,26 @@ def generation(hf_generator_cf,
 #    stopping_criteria = StoppingCriteriaList([StopOnTokens(tokenizer, format_cf, model_cf)])
     stopping_criteria = None
 
+    running_id = 0
+    if model.device.type == "cpu":
+        model = model.cuda()
     for j, batch in enumerate(tqdm(dataloader)):
         build_causal_mask_per_batch(model_cf, model, batch)
-        prompt_len = max(batch['prompt_len'])
-        if "FLORES" in dataloader.dataset.ds_promptbank.name:
-            max_new_tokens = ((prompt_len - batch['instructions_len'][0]) // dataloader.dataset.nprompts) 
-            print("Max new tokens for translation:", max_new_tokens)
-        else:
-            max_new_tokens = ((prompt_len - batch['instructions_len'][0]) // dataloader.dataset.nprompts) * 2
+        #prompt_len = max(batch['prompt_len'])
+        #if "FLORES" in dataloader.dataset.ds_promptbank.name:
+        #    max_new_tokens = ((prompt_len - batch['instructions_len'][0]) // dataloader.dataset.nprompts)  * 0.5
+        #    print("Max new tokens for translation:", max_new_tokens)
+        #else:
+        #    max_new_tokens = ((prompt_len - batch['instructions_len'][0]) // dataloader.dataset.nprompts) * 2
+        max_new_tokens = 50
+        if batch['input_ids'].device.type == 'cpu':
+            batch['input_ids'] = batch['input_ids'].cuda()
+            batch['attention_mask'] = batch['attention_mask'].cuda()
 
 
         with torch.no_grad():
             outputs = model.generate(batch['input_ids'],
-                                     attention_mask=batch['input_mask'],
+                                     attention_mask=batch['attention_mask'],
                                      pad_token_id=tokenizer.pad_token_id,
                                      return_dict_in_generate=True,
                                      output_scores=True,
@@ -55,7 +62,9 @@ def generation(hf_generator_cf,
             print(out)
 
         for i in range(len(gen_text)):
-            all_gen_text.append({"id": batch['ids'][i], "gen_text": gen_text[i]})
+            #all_gen_text.append({"id": batch['ids'][i], "gen_text": gen_text[i]})
+            all_gen_text.append({"id": running_id, "gen_text": gen_text[i]})
+            running_id += 1
 
     return all_gen_text 
 
@@ -175,7 +184,7 @@ def reset_mask(model):
             raise Exception("not implemented for model")
 
         self_attn.mask_prev_positions = False
-        self_atten.mask_all = False
+        self_attn.mask_all = False
         self_attn.mask_from = []
         self_attn.mask_till = []
 
@@ -214,13 +223,15 @@ class StopOnTokens(StoppingCriteria):
         # second token for Llama
         if "Llama" in str(model_cf.model_size):
             self.stop_token_ids = tokenizer.encode(l1_delim)[1:]
+            self.stop_token_ids = tokenizer.encode("\n")[1:] + self.stop_token_ids
         else:
             self.stop_token_ids = tokenizer.encode(l1_delim)
+            self.stop_token_ids = tokenizer.encode("\n") + self.stop_token_ids
 
         print("stop token ids:", self.stop_token_ids)
 
     def __call__(self, input_ids, scores, **kwargs):
-        if input_ids[0, -2].item() == self.stop_token_ids[0] and input_ids[0, -1].item() == self.stop_token_ids[1]:
+        if input_ids[0, -3].item() == self.stop_token_ids[0] and input_ids[0, -2].item() == self.stop_token_ids[1] and input_ids[0, -1].item() == self.stop_token_ids[2]:
             return True
         return False
 

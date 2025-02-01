@@ -45,7 +45,7 @@ class CollateFn:
         return {"ids":ids, 
                 "inputs":inputs,
                 "input_ids": input_ids, 
-                "input_mask": input_mask,
+                "attention_mask": input_mask,
                 "input_len": input_len,
 
                 "instructions": instructions,
